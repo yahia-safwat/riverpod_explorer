@@ -32,31 +32,26 @@ class AuthScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authStateAsyncValue = ref.watch(authStateChangesProvider);
+    final authController = ref.watch(authControllerProvider);
+    final isSignedIn = authController.isSignedIn;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Auth App'),
         actions: [
-          // check if user is logged in
-          if (authStateAsyncValue.valueOrNull != null)
+          if (isSignedIn)
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () {
-                final auth = ref.read(firebaseAuthProvider);
-                auth.logout();
+                ref.read(authControllerProvider).signOut();
               },
             ),
         ],
       ),
       body: Center(
-        child: authStateAsyncValue.when(
-          data: (user) => user != null
-              ? AuthenticatedView(user: user)
-              : const UnauthenticatedView(),
-          loading: () => const CircularProgressIndicator(),
-          error: (error, stack) => Text('Error: $error'),
-        ),
+        child: isSignedIn
+            ? AuthenticatedView(user: authController.user!)
+            : const UnauthenticatedView(),
       ),
     );
   }
@@ -93,8 +88,9 @@ class UnauthenticatedView extends ConsumerWidget {
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: () {
-            final auth = ref.read(firebaseAuthProvider);
-            auth.login('12345', 'user@example.com');
+            ref
+                .read(authControllerProvider)
+                .signIn('12345', 'user@example.com');
           },
           child: const Text('Login'),
         ),
