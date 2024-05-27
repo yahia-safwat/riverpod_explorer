@@ -1,13 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
-// Note: StateNotifierProvider has *two* type annotations
-final clockProvider = StateNotifierProvider<Clock, DateTime>((ref) {
-  return Clock();
-});
+import 'providers/weather_providers.dart';
+
 void main() {
   // ProviderScope is a widget that stores the state of all the providers we create.
   runApp(const ProviderScope(child: MyApp()));
@@ -41,40 +36,24 @@ class MyHomePage extends StatelessWidget {
         title: const Text('Riverpod Explorer'),
       ),
       body: const Center(
-        child: ClockWidget(),
+        child: WeatherWidget(),
       ),
     );
   }
 }
 
-class ClockWidget extends ConsumerWidget {
-  const ClockWidget({super.key});
+class WeatherWidget extends ConsumerWidget {
+  const WeatherWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentTime = ref.watch(clockProvider);
-    // format the time as `hh:mm:ss`
-    final timeFormatted = DateFormat.Hms().format(currentTime);
-    return Text(timeFormatted);
-  }
-}
-
-class Clock extends StateNotifier<DateTime> {
-  // 1. initialize with current time
-  Clock() : super(DateTime.now()) {
-    // 2. create a timer that fires every second
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      // 3. update the state with the current time
-      state = DateTime.now();
-    });
-  }
-
-  late final Timer _timer;
-
-  // 4. cancel the timer when finished
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
+    // watch the FutureProvider and get an AsyncValue<Weather>
+    final weatherAsync = ref.watch(weatherFutureProvider);
+    // use pattern matching to map the state to the UI
+    return weatherAsync.when(
+      loading: () => const CircularProgressIndicator(),
+      error: (err, stack) => Text('Error: $err'),
+      data: (weather) => Text(weather.toString()),
+    );
   }
 }
