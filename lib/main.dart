@@ -1,27 +1,40 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/shared_preferences_provider.dart';
+import 'screens/home_screen.dart';
 
-import 'movie/screens/movie_details_screen.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
-  // ProviderScope is a widget that stores the state of all the providers we create.
-  runApp(const ProviderScope(child: MyApp()));
+  // Initialize shared preferences instance before running app
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Override the shared preferences provider with our new instance
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Riverpod Example',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MovieDetailsScreen(movieId: 550), // Example movie ID
+      home: const HomeScreen(),
     );
   }
 }
