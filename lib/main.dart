@@ -1,21 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'providers/shared_preferences_provider.dart';
-import 'screens/home_screen.dart';
+import 'product/widgets/product_list.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final sharedPreferences = await SharedPreferences.getInstance();
-
-  runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
-      ],
-      child: const MyApp(),
-    ),
-  );
+void main() {
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -25,12 +13,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Riverpod Example',
+      title: 'Riverpod Scoped Providers Example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      home: const HomeScreen(),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Product List'),
+        ),
+        body: const ProductList(),
+      ),
     );
   }
 }
