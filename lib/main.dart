@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'auth/user.dart';
-import 'providers/auth_providers.dart';
+final counterStateProvider = StateProvider<int>((_) => 0);
 
 void main() {
   // ProviderScope is a widget that stores the state of all the providers we create.
@@ -22,79 +21,42 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const AuthScreen(),
+      home: const CounterScreen(),
     );
   }
 }
 
-class AuthScreen extends ConsumerWidget {
-  const AuthScreen({super.key});
+class CounterScreen extends ConsumerWidget {
+  const CounterScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authController = ref.watch(authControllerProvider);
-    final isSignedIn = authController.isSignedIn;
+    // if we use a StateProvider<T>, the type of the previous and current
+    // values is StateController<T>
+    ref.listen<int>(counterStateProvider, (previous, current) {
+      // note: this callback executes when the provider value changes,
+      // not when the build method is called
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Value is $current')),
+      );
+    });
+
+    // watch the provider and rebuild when the value changes
+    final counter = ref.watch(counterStateProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Auth App'),
-        actions: [
-          if (isSignedIn)
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                ref.read(authControllerProvider).signOut();
-              },
-            ),
-        ],
+        title: const Text('Counter App'),
       ),
       body: Center(
-        child: isSignedIn
-            ? AuthenticatedView(user: authController.user!)
-            : const UnauthenticatedView(),
-      ),
-    );
-  }
-}
-
-class AuthenticatedView extends StatelessWidget {
-  final User user;
-
-  const AuthenticatedView({super.key, required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Logged in as ${user.email}',
-            style: const TextStyle(fontSize: 20)),
-        const SizedBox(height: 20),
-        Text('UID: ${user.uid}', style: const TextStyle(fontSize: 20)),
-      ],
-    );
-  }
-}
-
-class UnauthenticatedView extends ConsumerWidget {
-  const UnauthenticatedView({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('Not logged in', style: TextStyle(fontSize: 20)),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            ref
-                .read(authControllerProvider)
-                .signIn('12345', 'user@example.com');
-          },
-          child: const Text('Login'),
+        child: ElevatedButton(
+          // use the value
+          child: Text('Value: $counter'),
+          // change the state inside a button callback
+          onPressed: () => ref.read(counterStateProvider.notifier).state++,
         ),
-      ],
+      ),
     );
   }
 }
